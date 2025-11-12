@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    container_name: stock-prediction-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - TIINGO_API_KEY=${TIINGO_API_KEY}
+      - TIME_STEP=100
+      - TRAINING_SIZE_RATIO=0.65
+      - LSTM_UNITS=50
+      - EPOCHS=100
+      - BATCH_SIZE=64
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    restart: unless-stopped
+    networks:
+      - stock-prediction-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+    container_name: stock-prediction-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - stock-prediction-network
+
+networks:
+  stock-prediction-network:
+    driver: bridge
+
+volumes:
+  data:
+  models:
